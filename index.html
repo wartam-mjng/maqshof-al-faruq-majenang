@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Penjualan Koperasi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.0/lucide.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .nav-active { background-color: #1e293b; border-left: 4px solid #ea580c; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <div id="loading" class="loading-overlay">
+        <div class="flex flex-col items-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
+            <p class="mt-4 text-sm font-medium text-slate-600">Memproses...</p>
+        </div>
+    </div>
+
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-slate-900 text-white flex-shrink-0 hidden md:flex flex-col">
+            <div class="p-6">
+                <h1 class="text-2xl font-bold flex items-center gap-2 text-orange-400">
+                    <i data-lucide="shopping-bag"></i> TokoKoperasi
+                </h1>
+            </div>
+            <nav class="flex-1 px-4 space-y-1">
+                <button onclick="showPage('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard
+                </button>
+                <button onclick="showPage('barang')" id="nav-barang" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition">
+                    <i data-lucide="package" class="w-5 h-5"></i> Stok Barang
+                </button>
+                <button onclick="showPage('penjualan')" id="nav-penjualan" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition">
+                    <i data-lucide="shopping-cart" class="w-5 h-5"></i> Pesan Barang
+                </button>
+            </nav>
+            <div class="p-4 border-t border-slate-800 text-xs text-slate-400">
+                Sistem Penjualan v2.4
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto">
+            <header class="bg-white shadow-sm p-4 flex justify-between items-center md:px-8 border-b border-gray-200">
+                <h2 id="page-title" class="text-xl font-semibold text-slate-700">Dashboard</h2>
+                <div class="flex items-center gap-4 text-sm">
+                    <span id="conn-status" class="bg-gray-100 text-gray-600 px-3 py-1 rounded-full font-medium flex items-center gap-2">
+                        <span id="status-dot" class="w-2 h-2 rounded-full bg-gray-400"></span> 
+                        <span id="status-text">Mengecek Koneksi...</span>
+                    </span>
+                </div>
+            </header>
+
+            <div class="p-6 md:p-8 max-w-7xl mx-auto">
+                <!-- Dashboard -->
+                <div id="page-dashboard" class="page-content">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                            <p class="text-xs text-gray-400 mb-1 uppercase font-bold">Jenis Produk</p>
+                            <h3 class="text-3xl font-bold text-slate-800" id="stat-barang">0</h3>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                            <p class="text-xs text-gray-400 mb-1 uppercase font-bold">Total Unit</p>
+                            <h3 class="text-3xl font-bold text-blue-600" id="stat-total-stok">0</h3>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                            <p class="text-xs text-gray-400 mb-1 uppercase font-bold">Nilai Aset</p>
+                            <h3 class="text-3xl font-bold text-green-600" id="stat-omzet">Rp 0</h3>
+                        </div>
+                    </div>
+                    
+                    <div id="alert-db" class="hidden bg-orange-50 border-l-4 border-orange-500 p-4 rounded-r-xl mb-6">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="info" class="text-orange-600"></i>
+                            <p class="text-orange-700 font-medium text-sm">Aplikasi berjalan dalam mode demo. Pastikan URL Google Apps Script benar untuk sinkronisasi.</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm text-center">
+                        <i data-lucide="store" class="w-16 h-16 mx-auto text-orange-200 mb-4"></i>
+                        <h4 class="text-xl font-bold text-slate-800">TokoKoperasi Digital</h4>
+                        <p class="text-slate-500 mt-2 max-w-md mx-auto">Gunakan menu "Pesan Barang" untuk simulasi pesanan pelanggan.</p>
+                    </div>
+                </div>
+
+                <!-- Page Barang (Admin Only) -->
+                <div id="page-barang" class="page-content hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-bold text-slate-800">Inventaris (Database)</h3>
+                        <button onclick="toggleModal('modal-barang')" class="bg-orange-600 text-white px-5 py-2 rounded-lg font-semibold hover:bg-orange-700 transition flex items-center gap-2">
+                            <i data-lucide="plus" class="w-4 h-4"></i> Tambah
+                        </button>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
+                        <table class="w-full text-left">
+                            <thead class="bg-slate-50 text-slate-500 text-xs uppercase font-bold">
+                                <tr>
+                                    <th class="p-5 border-b">ID</th>
+                                    <th class="p-5 border-b">Produk</th>
+                                    <th class="p-5 border-b text-right">Harga</th>
+                                    <th class="p-5 border-b text-center">Stok</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-barang-body" class="text-slate-700"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Page Pesan Barang (User/Customer View) -->
+                <div id="page-penjualan" class="page-content hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div class="lg:col-span-2 space-y-4">
+                            <div class="bg-white p-4 rounded-xl border border-gray-200 mb-4">
+                                <h3 class="font-bold text-slate-700 mb-2">Katalog Belanja</h3>
+                                <p class="text-xs text-slate-400">Pilih produk yang ingin Anda pesan.</p>
+                            </div>
+                            <div id="pos-items"></div>
+                        </div>
+                        
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-fit sticky top-4">
+                            <h3 class="font-bold mb-4 flex items-center gap-2 text-orange-600">
+                                <i data-lucide="shopping-cart"></i> Daftar Pesanan
+                            </h3>
+                            
+                            <!-- Form Pemesan -->
+                            <div class="mb-4 space-y-3">
+                                <input type="text" id="buyer-name" placeholder="Nama Anda" class="w-full p-2 text-sm border rounded-lg outline-none focus:ring-1 focus:ring-orange-500">
+                                <textarea id="buyer-address" placeholder="Alamat Pengiriman / Catatan" class="w-full p-2 text-sm border rounded-lg outline-none focus:ring-1 focus:ring-orange-500 h-20"></textarea>
+                            </div>
+
+                            <div id="cart-list" class="space-y-2 mb-6 min-h-[100px] border-t pt-4"></div>
+                            
+                            <div class="border-t pt-4">
+                                <div class="flex justify-between font-bold text-xl mb-6 text-slate-800">
+                                    <span>Total</span>
+                                    <span id="cart-total">Rp 0</span>
+                                </div>
+                                <div class="grid grid-cols-1 gap-2">
+                                    <button onclick="checkoutWhatsApp()" class="w-full bg-green-600 text-white py-3 rounded-xl font-bold hover:bg-green-700 transition flex items-center justify-center gap-2">
+                                        <i data-lucide="message-circle"></i> Pesan via WhatsApp
+                                    </button>
+                                    <button onclick="processCheckout()" class="w-full bg-slate-100 text-slate-600 py-2 rounded-xl text-sm font-semibold hover:bg-slate-200 transition">
+                                        Simpan di Sistem Saja
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Form -->
+    <div id="modal-barang" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl max-w-md w-full p-8">
+            <h3 class="text-xl font-bold mb-6">Tambah Produk Baru</h3>
+            <form onsubmit="saveBarang(event)" class="space-y-4">
+                <input type="text" name="nama" placeholder="Nama Barang" required class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-orange-500">
+                <div class="grid grid-cols-2 gap-4">
+                    <input type="number" name="harga" placeholder="Harga" required class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-orange-500">
+                    <input type="number" name="stok" placeholder="Stok" required class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-orange-500">
+                </div>
+                <button type="submit" class="w-full bg-orange-600 text-white py-3 rounded-xl font-bold hover:bg-orange-700">Simpan ke Database</button>
+                <button type="button" onclick="toggleModal('modal-barang')" class="w-full text-gray-400 font-medium py-2">Batal</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // GANTI INI DENGAN URL GAS ANDA
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzuIKsilHtIMMd3LYgNcTr_tMVsu7Xl8EGVMfgHE3fN_3L_WPAnMtQOHNgcvB-X7_az/exec";
+        const ADMIN_WHATSAPP = "6285154989545"; // Ganti dengan nomor WhatsApp Koperasi Anda (Gunakan kode negara 62)
+
+        let inventory = [];
+        let cart = [];
+
+        async function initApp() {
+            showLoading(true);
+            try {
+                const res = await fetch(WEB_APP_URL);
+                if(!res.ok) throw new Error();
+                inventory = await res.json();
+                updateStatus("connected");
+            } catch (e) {
+                console.warn("Menggunakan Mock Data.");
+                inventory = [
+                    {id: "BRG-101", nama: "Beras Premium 5kg", kategori: "Sembako", harga: 75000, stok: 50},
+                    {id: "BRG-102", nama: "Minyak Goreng 2L", kategori: "Sembako", harga: 34000, stok: 25},
+                    {id: "BRG-103", nama: "Gula Pasir 1kg", kategori: "Sembako", harga: 16000, stok: 40},
+                    {id: "BRG-104", nama: "Sabun Mandi Cair", kategori: "Lainnya", harga: 22000, stok: 15}
+                ];
+                updateStatus("mock");
+            }
+            updateDashboard();
+            renderInventory();
+            renderPOS();
+            showPage('dashboard');
+            showLoading(false);
+            lucide.createIcons();
+        }
+
+        function checkoutWhatsApp() {
+            const name = document.getElementById('buyer-name').value;
+            const address = document.getElementById('buyer-address').value;
+            
+            if (!name || !cart.length) {
+                alert("Harap isi Nama Anda dan pilih barang terlebih dahulu.");
+                return;
+            }
+
+            let message = `Halo Admin TokoKoperasi,%0A%0A*PESANAN BARU*%0A`;
+            message += `Nama: ${name}%0A`;
+            message += `Alamat: ${address || '-'}%0A%0A`;
+            message += `*Daftar Barang:*%0A`;
+            
+            let total = 0;
+            cart.forEach(item => {
+                const subtotal = item.harga * item.qty;
+                message += `- ${item.nama} (x${item.qty}) : Rp ${subtotal.toLocaleString()}%0A`;
+                total += subtotal;
+            });
+            
+            message += `%0A*TOTAL PEMBAYARAN: Rp ${total.toLocaleString()}*%0A%0AMohon segera diproses ya, terima kasih!`;
+            
+            window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${message}`, '_blank');
+        }
+
+        function updateStatus(type) {
+            const dot = document.getElementById('status-dot');
+            const txt = document.getElementById('status-text');
+            const alert = document.getElementById('alert-db');
+            if (type === "connected") {
+                dot.className = "w-2 h-2 rounded-full bg-green-500";
+                txt.innerText = "Database Terhubung";
+                alert.classList.add('hidden');
+            } else {
+                dot.className = "w-2 h-2 rounded-full bg-orange-500 animate-pulse";
+                txt.innerText = "Mode Pratinjau";
+                alert.classList.remove('hidden');
+            }
+        }
+
+        function showPage(id) {
+            document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('nav-active'));
+            document.getElementById('page-' + id).classList.remove('hidden');
+            document.getElementById('nav-' + id).classList.add('nav-active');
+            document.getElementById('page-title').innerText = id === 'penjualan' ? 'Pesan Barang' : id.charAt(0).toUpperCase() + id.slice(1);
+        }
+
+        function updateDashboard() {
+            document.getElementById('stat-barang').innerText = inventory.length;
+            const totalStok = inventory.reduce((a, b) => a + Number(b.stok), 0);
+            const aset = inventory.reduce((a, b) => a + (Number(b.harga) * Number(b.stok)), 0);
+            document.getElementById('stat-total-stok').innerText = totalStok;
+            document.getElementById('stat-omzet').innerText = "Rp " + aset.toLocaleString();
+        }
+
+        function renderInventory() {
+            const tbody = document.getElementById('table-barang-body');
+            tbody.innerHTML = inventory.map(item => `
+                <tr class="border-t hover:bg-slate-50 transition">
+                    <td class="p-5 font-mono text-xs text-slate-400">${item.id}</td>
+                    <td class="p-5 font-bold">${item.nama}</td>
+                    <td class="p-5 text-right font-semibold">Rp ${Number(item.harga).toLocaleString()}</td>
+                    <td class="p-5 text-center"><span class="bg-blue-100 text-blue-700 px-3 py-1 rounded text-xs font-bold">${item.stok}</span></td>
+                </tr>
+            `).join('');
+        }
+
+        function renderPOS() {
+            const container = document.getElementById('pos-items');
+            container.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 gap-4">` + 
+                inventory.map(item => `
+                <div class="bg-white p-4 rounded-xl border hover:border-orange-500 cursor-pointer transition shadow-sm" onclick="addToCart('${item.id}')">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h4 class="font-bold text-slate-800">${item.nama}</h4>
+                            <p class="text-sm text-slate-500">Rp ${Number(item.harga).toLocaleString()}</p>
+                        </div>
+                        <span class="text-[10px] bg-slate-100 px-2 py-1 rounded font-bold text-slate-400">Stok: ${item.stok}</span>
+                    </div>
+                </div>
+            `).join('') + `</div>`;
+        }
+
+        function addToCart(id) {
+            const item = inventory.find(i => i.id === id);
+            const cartItem = cart.find(c => c.id === id);
+            if (item.stok <= (cartItem ? cartItem.qty : 0)) return alert("Stok tidak mencukupi!");
+            if (cartItem) cartItem.qty++; else cart.push({...item, qty: 1});
+            renderCart();
+        }
+
+        function renderCart() {
+            const list = document.getElementById('cart-list');
+            let total = 0;
+            list.innerHTML = cart.map(i => {
+                total += i.harga * i.qty;
+                return `
+                    <div class="flex justify-between items-center text-sm bg-slate-50 p-2 rounded-lg">
+                        <div class="flex flex-col">
+                            <span class="font-bold text-slate-700">${i.nama}</span>
+                            <span class="text-xs text-slate-400">${i.qty} x Rp ${i.harga.toLocaleString()}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <b class="text-slate-800">Rp ${(i.harga*i.qty).toLocaleString()}</b>
+                            <button onclick="removeFromCart('${i.id}')" class="text-red-400 hover:text-red-600">×</button>
+                        </div>
+                    </div>`;
+            }).join('') || '<p class="text-center text-slate-400 text-sm py-4 italic">Belum ada barang dipilih</p>';
+            document.getElementById('cart-total').innerText = 'Rp ' + total.toLocaleString();
+        }
+
+        function removeFromCart(id) {
+            cart = cart.filter(c => c.id !== id);
+            renderCart();
+        }
+
+        async function processCheckout() {
+            if(!cart.length) return;
+            showLoading(true);
+            try {
+                await fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'jual', items: cart }) });
+                alert("Berhasil disimpan ke sistem!");
+                cart = []; renderCart(); initApp();
+            } catch(e) { alert("Selesai (Demo)"); }
+            showLoading(false);
+        }
+
+        function toggleModal(id) { document.getElementById(id).classList.toggle('hidden'); }
+        function showLoading(s) { document.getElementById('loading').style.display = s ? 'flex' : 'none'; }
+
+        window.onload = initApp;
+    </script>
+</body>
+</html>

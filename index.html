@@ -3,23 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Maqshof Al Faruq Majenang - Koperasi Digital</title>
+    <title>Maqshof Al Faruq Majenang</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.0/lucide.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
         .nav-active { background-color: #1e293b; border-left: 4px solid #ea580c; color: #fb923c !important; }
-        .loading-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255, 255, 255, 0.9);
-            z-index: 9999;
-            justify-content: center;
-            align-items: center;
-        }
-        .admin-only { display: none; }
+        .loading-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.9); z-index: 9999; justify-content: center; align-items: center; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800">
@@ -31,328 +22,119 @@
         </div>
     </div>
 
-    <!-- Screen: Auth (Login & Register) -->
+    <!-- Screen: Auth -->
     <div id="screen-auth" class="min-h-screen flex items-center justify-center p-4 bg-slate-900">
         <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md">
             <div class="text-center mb-8">
-                <div class="bg-orange-100 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <i data-lucide="store" class="text-orange-600 w-8 h-8"></i>
-                </div>
-                <h1 id="auth-title" class="text-2xl font-bold text-slate-800 tracking-tight">Maqshof Al Faruq</h1>
-                <p id="auth-subtitle" class="text-slate-500 text-sm">Maqshof Al Faruq Majenang</p>
+                <h1 class="text-2xl font-bold text-slate-800">Maqshof Al Faruq</h1>
+                <p class="text-slate-500 text-sm">Silakan login untuk melanjutkan</p>
             </div>
-
-            <form id="form-login" onsubmit="handleLogin(event)" class="space-y-4">
-                <div>
-                    <label class="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Username</label>
-                    <input type="text" id="login-username" required class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-orange-500 transition mt-1">
-                </div>
-                <div>
-                    <label class="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Password</label>
-                    <input type="password" id="login-password" required class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-orange-500 transition mt-1">
-                </div>
-                <button type="submit" class="w-full bg-orange-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-orange-200 hover:bg-orange-700 transition">
-                    Masuk ke Sistem
-                </button>
-                <p class="text-center text-sm text-slate-500 mt-4">
-                    Belum punya akun? <button type="button" onclick="toggleAuth(true)" class="text-orange-600 font-bold hover:underline">Daftar Sekarang</button>
-                </p>
-            </form>
-
-            <form id="form-register" onsubmit="handleRegister(event)" class="space-y-4 hidden">
-                <div>
-                    <label class="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Nama Lengkap</label>
-                    <input type="text" id="reg-name" required class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-orange-500 transition mt-1" placeholder="Nama Anda">
-                </div>
-                <div>
-                    <label class="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Username Baru</label>
-                    <input type="text" id="reg-username" required class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-orange-500 transition mt-1">
-                </div>
-                <div>
-                    <label class="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Password</label>
-                    <input type="password" id="reg-password" required class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-orange-500 transition mt-1">
-                </div>
-                <button type="submit" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold shadow-lg hover:bg-slate-800 transition">
-                    Buat Akun Anggota
-                </button>
-                <p class="text-center text-sm text-slate-500 mt-4">
-                    Sudah punya akun? <button type="button" onclick="toggleAuth(false)" class="text-orange-600 font-bold hover:underline">Masuk</button>
-                </p>
+            <form onsubmit="handleLogin(event)" class="space-y-4">
+                <input type="text" id="login-username" placeholder="Username" required class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-orange-500">
+                <input type="password" id="login-password" placeholder="Password" required class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-orange-500">
+                <button type="submit" class="w-full bg-orange-600 text-white py-4 rounded-2xl font-bold shadow-lg hover:bg-orange-700 transition">Masuk</button>
             </form>
             <p id="auth-error" class="text-red-500 text-center text-sm mt-4 hidden"></p>
         </div>
     </div>
 
-    <!-- Screen: Main App -->
+    <!-- Screen: Main -->
     <div id="screen-main" class="hidden flex h-screen overflow-hidden">
-        <!-- Sidebar -->
-        <aside class="w-64 bg-slate-900 text-white flex-shrink-0 hidden md:flex flex-col">
-            <div class="p-6 border-b border-slate-800 text-center">
-                <h1 class="text-lg font-bold text-orange-400">Maqshof Al Faruq</h1>
-            </div>
-            <nav class="flex-1 px-4 py-6 space-y-2">
-                <button onclick="showPage('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 transition text-slate-300">
-                    <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard
-                </button>
-                <button onclick="showPage('barang')" id="nav-barang" class="nav-btn admin-only w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 transition text-slate-300">
-                    <i data-lucide="package" class="w-5 h-5"></i> Kelola Stok
-                </button>
-                <button onclick="showPage('penjualan')" id="nav-penjualan" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 transition text-slate-300">
-                    <i data-lucide="shopping-cart" class="w-5 h-5"></i> Pesan Barang
-                </button>
+        <aside class="w-64 bg-slate-900 text-white flex-shrink-0 flex flex-col">
+            <div class="p-6 border-b border-slate-800 font-bold text-orange-400">Maqshof App</div>
+            <nav class="flex-1 p-4 space-y-2">
+                <button onclick="showPage('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 transition">Dashboard</button>
+                <button onclick="showPage('barang')" id="nav-barang" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 transition hidden admin-only">Kelola Stok</button>
+                <button onclick="showPage('penjualan')" id="nav-penjualan" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 transition">Pesan Barang</button>
             </nav>
-            <div class="p-4 border-t border-slate-800 bg-slate-900/50">
-                <div class="flex items-center gap-3 mb-4 px-2">
-                    <div class="w-10 h-10 bg-orange-600 rounded-xl flex items-center justify-center font-bold text-white shadow-lg" id="user-initial">-</div>
-                    <div class="overflow-hidden">
-                        <p class="text-sm font-bold truncate text-white" id="user-display">User</p>
-                        <p class="text-[10px] text-orange-400 font-bold uppercase tracking-widest" id="user-role">Role</p>
-                    </div>
-                </div>
-                <button onclick="handleLogout()" class="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-400 hover:bg-red-500/10 rounded-xl transition">
-                    <i data-lucide="log-out" class="w-4 h-4"></i> Keluar
-                </button>
+            <div class="p-4 border-t border-slate-800">
+                <button onclick="location.reload()" class="w-full text-red-400 text-sm text-left px-4 py-2">Keluar</button>
             </div>
         </aside>
 
-        <!-- Main Content -->
-        <main class="flex-1 overflow-y-auto bg-slate-50">
-            <header class="bg-white p-4 flex justify-between items-center md:px-8 border-b border-slate-200 sticky top-0 z-20">
-                <h2 id="page-title" class="text-xl font-bold text-slate-800">Dashboard</h2>
-                <div class="flex items-center gap-2">
-                     <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                     <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Sistem Aktif</span>
+        <main class="flex-1 overflow-y-auto bg-slate-50 p-8">
+            <header class="mb-8 flex justify-between items-center">
+                <h2 id="page-title" class="text-2xl font-bold text-slate-800">Dashboard</h2>
+                <div class="text-right">
+                    <p id="user-display" class="font-bold"></p>
+                    <p id="user-role" class="text-xs text-orange-500 uppercase font-bold"></p>
                 </div>
             </header>
 
-            <div class="p-6 md:p-8 max-w-7xl mx-auto">
-                <!-- Page: Dashboard -->
-                <div id="page-dashboard" class="page-content space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
-                            <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Total Produk</p>
-                            <h3 class="text-3xl font-black text-slate-800" id="stat-barang">0</h3>
-                        </div>
-                        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
-                            <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Stok Tersedia</p>
-                            <h3 class="text-3xl font-black text-blue-600" id="stat-stok">0</h3>
-                        </div>
-                        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm admin-only">
-                            <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Estimasi Nilai</p>
-                            <h3 class="text-3xl font-black text-green-600" id="stat-aset">Rp 0</h3>
-                        </div>
+            <div id="page-dashboard" class="page-content space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+                        <p class="text-xs text-slate-400 font-bold uppercase">Total Barang</p>
+                        <h3 id="stat-barang" class="text-3xl font-bold">0</h3>
                     </div>
-                    
-                    <div class="bg-slate-900 rounded-3xl p-8 text-white relative overflow-hidden shadow-xl">
-                        <div class="relative z-10">
-                            <h2 class="text-2xl font-bold mb-2">Ahlan wa Sahlan, <span id="welcome-name">User</span>!</h2>
-                            <p class="text-slate-400 text-sm max-w-md">Senang melihat Anda kembali di Maqshof Al Faruq Majenang. Silakan gunakan menu navigasi untuk memesan barang.</p>
-                        </div>
-                        <i data-lucide="sparkles" class="absolute right-8 top-8 w-24 h-24 text-white/5"></i>
+                    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+                        <p class="text-xs text-slate-400 font-bold uppercase">Stok Tersedia</p>
+                        <h3 id="stat-stok" class="text-3xl font-bold text-orange-600">0</h3>
                     </div>
                 </div>
+            </div>
 
-                <!-- Page: Kelola Stok (ADMIN ONLY) -->
-                <div id="page-barang" class="page-content hidden admin-only">
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-                        <h3 class="text-xl font-bold">Manajemen Inventaris</h3>
-                        <button onclick="openModalBarang()" class="bg-orange-600 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-orange-700 transition shadow-lg shadow-orange-200">
-                            <i data-lucide="plus"></i> Tambah Barang Baru
-                        </button>
-                    </div>
-                    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left">
-                                <thead class="bg-slate-50 text-[10px] uppercase font-bold text-slate-400">
-                                    <tr>
-                                        <th class="p-6">Produk</th>
-                                        <th class="p-6">Kategori</th>
-                                        <th class="p-6 text-right">Harga</th>
-                                        <th class="p-6 text-center">Stok</th>
-                                        <th class="p-6 text-center">Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="table-barang-body" class="divide-y divide-slate-100"></tbody>
-                            </table>
-                        </div>
-                    </div>
+            <div id="page-barang" class="page-content hidden">
+                <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+                    <table class="w-full text-left">
+                        <thead class="bg-slate-50 text-xs font-bold text-slate-400 uppercase">
+                            <tr>
+                                <th class="p-4">Barang</th>
+                                <th class="p-4">Kategori</th>
+                                <th class="p-4 text-right">Harga</th>
+                                <th class="p-4 text-center">Stok</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-barang-body" class="divide-y divide-slate-100"></tbody>
+                    </table>
                 </div>
+            </div>
 
-                <!-- Page: Pesan Barang -->
-                <div id="page-penjualan" class="page-content hidden">
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        <div class="lg:col-span-2">
-                            <div class="mb-6 flex gap-4 overflow-x-auto pb-2" id="category-filter">
-                                <button onclick="filterCatalog('Semua')" class="px-6 py-2 bg-slate-900 text-white rounded-full text-sm font-bold">Semua</button>
-                            </div>
-                            <div id="pos-items" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-                        </div>
-                        <div class="lg:col-span-1">
-                            <div class="bg-white p-6 rounded-3xl shadow-xl border border-slate-100 sticky top-24">
-                                <h3 class="font-bold text-lg mb-4 flex items-center gap-2 border-b pb-4">
-                                    <i data-lucide="shopping-bag" class="text-orange-600"></i> Keranjang Pesanan
-                                </h3>
-                                <div id="cart-list" class="space-y-3 mb-6 max-h-[400px] overflow-y-auto"></div>
-                                <div class="border-t pt-6">
-                                    <div class="flex justify-between items-end mb-6">
-                                        <span class="text-slate-400 font-medium">Total Bayar</span>
-                                        <span id="cart-total" class="font-black text-2xl text-slate-800">Rp 0</span>
-                                    </div>
-                                    <button onclick="processOrder()" class="w-full bg-green-600 text-white py-4 rounded-2xl font-bold hover:bg-green-700 transition flex items-center justify-center gap-3 shadow-lg shadow-green-100">
-                                        <i data-lucide="send"></i> Kirim Pesanan (WA)
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+            <div id="page-penjualan" class="page-content hidden">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="pos-items"></div>
+                <div class="mt-8 bg-white p-6 rounded-3xl shadow-lg border border-slate-100">
+                    <h3 class="font-bold mb-4">Keranjang</h3>
+                    <div id="cart-list" class="space-y-2 mb-4"></div>
+                    <div class="flex justify-between font-bold text-lg border-t pt-4">
+                        <span>Total</span>
+                        <span id="cart-total">Rp 0</span>
                     </div>
+                    <button onclick="processOrder()" class="mt-4 w-full bg-green-600 text-white py-4 rounded-2xl font-bold">Kirim Pesanan (WA)</button>
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- Modal Form Barang -->
-    <div id="modal-barang" class="fixed inset-0 bg-slate-900/60 hidden flex items-center justify-center p-4 z-[9999] backdrop-blur-sm">
-        <div class="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl">
-            <h3 class="text-2xl font-bold mb-6" id="modal-title">Data Barang</h3>
-            <form id="form-barang" onsubmit="saveBarang(event)" class="space-y-4">
-                <input type="hidden" id="edit-id">
-                <div>
-                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Nama Barang</label>
-                    <input type="text" id="input-nama" required class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl mt-1">
-                </div>
-                <div>
-                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Kategori</label>
-                    <input type="text" id="input-kategori" list="kategori-list" required class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl mt-1">
-                    <datalist id="kategori-list">
-                        <option value="Makanan">
-                        <option value="Minuman">
-                        <option value="Alat Tulis">
-                        <option value="Lainnya">
-                    </datalist>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Harga (Rp)</label>
-                        <input type="number" id="input-harga" required class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl mt-1">
-                    </div>
-                    <div>
-                        <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Stok</label>
-                        <input type="number" id="input-stok" required class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl mt-1">
-                    </div>
-                </div>
-                <div class="flex gap-2 pt-4">
-                    <button type="button" onclick="toggleModal('modal-barang')" class="flex-1 py-4 text-slate-400 font-bold hover:text-slate-600 transition">Batal</button>
-                    <button type="submit" class="flex-[2] bg-slate-900 text-white py-4 rounded-2xl font-bold hover:bg-slate-800 transition shadow-lg">Simpan Data</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
     <script>
-        // Gunakan URL Web App Anda di sini
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzuIKsilHtIMMd3LYgNcTr_tMVsu7Xl8EGVMfgHE3fN_3L_WPAnMtQOHNgcvB-X7_az/exec";
-        const ADMIN_WA = "6285154989545";
-
-        let currentUser = null;
-        let inventory = [];
-        let cart = [];
-
-        function toggleAuth(isRegister) {
-            const loginForm = document.getElementById('form-login');
-            const regForm = document.getElementById('form-register');
-            const error = document.getElementById('auth-error');
-            error.classList.add('hidden');
-            
-            if(isRegister) {
-                loginForm.classList.add('hidden');
-                regForm.classList.remove('hidden');
-                document.getElementById('auth-title').innerText = "Daftar Anggota";
-            } else {
-                loginForm.classList.remove('hidden');
-                regForm.classList.add('hidden');
-                document.getElementById('auth-title').innerText = "Maqshof Al Faruq";
-            }
-        }
+        const WEB_APP_URL = "ISI_DENGAN_URL_WEB_APP_ANDA";
+        let inventory = [], cart = [], currentUser = null;
 
         async function handleLogin(e) {
             e.preventDefault();
             const u = document.getElementById('login-username').value;
             const p = document.getElementById('login-password').value;
-            const error = document.getElementById('auth-error');
-            
             showLoading(true, "Memverifikasi...");
             try {
                 const res = await fetch(`${WEB_APP_URL}?action=login&u=${u}&p=${p}`);
                 const result = await res.json();
                 if(result.status === "success") {
                     currentUser = result.user;
-                    initMainApp();
+                    initApp();
                 } else {
-                    error.innerText = "Username atau password salah!";
-                    error.classList.remove('hidden');
+                    document.getElementById('auth-error').innerText = "Username/Password Salah";
+                    document.getElementById('auth-error').classList.remove('hidden');
                 }
-            } catch(err) {
-                // Fallback untuk demo jika API belum siap
-                if(u === "admin" && p === "admin") {
-                    currentUser = { username: "admin", role: "admin", nama: "Administrator" };
-                    initMainApp();
-                } else {
-                    error.innerText = "Gagal terhubung ke database. Cek koneksi Anda.";
-                    error.classList.remove('hidden');
-                }
-            }
+            } catch(e) { alert("Error koneksi"); }
             showLoading(false);
         }
 
-        async function handleRegister(e) {
-            e.preventDefault();
-            const data = {
-                action: 'register',
-                nama: document.getElementById('reg-name').value,
-                username: document.getElementById('reg-username').value,
-                password: document.getElementById('reg-password').value
-            };
-
-            showLoading(true, "Mendaftarkan...");
-            try {
-                await fetch(WEB_APP_URL, { 
-                    method: 'POST', 
-                    mode: 'no-cors', 
-                    body: JSON.stringify(data) 
-                });
-                alert("Pendaftaran berhasil! Silakan login.");
-                toggleAuth(false);
-            } catch(err) {
-                alert("Gagal mendaftar. Hubungi admin.");
-            }
-            showLoading(false);
-        }
-
-        function initMainApp() {
+        function initApp() {
             document.getElementById('screen-auth').classList.add('hidden');
             document.getElementById('screen-main').classList.remove('hidden');
-            
-            // Atur Info Pengguna
-            document.getElementById('user-display').innerText = currentUser.nama || currentUser.username;
+            document.getElementById('user-display').innerText = currentUser.nama;
             document.getElementById('user-role').innerText = currentUser.role;
-            document.getElementById('user-initial').innerText = (currentUser.nama || currentUser.username).charAt(0).toUpperCase();
-            document.getElementById('welcome-name').innerText = currentUser.nama || currentUser.username;
-
-            // Kontrol visibilitas berdasarkan role
-            const adminElements = document.querySelectorAll('.admin-only');
-            adminElements.forEach(el => {
-                if (currentUser.role === 'admin') {
-                    el.style.display = 'block';
-                    el.classList.remove('hidden');
-                } else {
-                    el.style.display = 'none';
-                    el.classList.add('hidden');
-                }
-            });
-
+            if(currentUser.role === 'admin') document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
             fetchData();
-            showPage('dashboard');
-            lucide.createIcons();
         }
 
         async function fetchData() {
@@ -360,209 +142,69 @@
             try {
                 const res = await fetch(WEB_APP_URL);
                 inventory = await res.json();
-                updateDashboard();
-                renderInventory();
-                renderCatalog();
-            } catch(e) { 
-                console.error("Fetch Error:", e);
-                // Data dummy jika fetch gagal
-                inventory = [
-                    {id: 'B001', nama: 'Contoh Produk', harga: 5000, stok: 10, kategori: 'Umum'}
-                ];
-                updateDashboard();
-                renderInventory();
-                renderCatalog();
-            }
+                renderUI();
+            } catch(e) { console.error(e); }
             showLoading(false);
         }
 
-        function showPage(id) {
-            // Proteksi halaman admin
-            if(id === 'barang' && currentUser.role !== 'admin') {
-                showPage('dashboard');
-                return;
-            }
-
-            document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden'));
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('nav-active'));
-            
-            document.getElementById('page-' + id).classList.remove('hidden');
-            const navBtn = document.getElementById('nav-' + id);
-            if(navBtn) navBtn.classList.add('nav-active');
-            
-            document.getElementById('page-title').innerText = id === 'penjualan' ? 'Pesan Barang' : 
-                                                             id === 'barang' ? 'Kelola Stok' : 
-                                                             'Dashboard';
-            lucide.createIcons();
-        }
-
-        function updateDashboard() {
+        function renderUI() {
             document.getElementById('stat-barang').innerText = inventory.length;
-            const stok = inventory.reduce((a, b) => a + Number(b.stok), 0);
-            document.getElementById('stat-stok').innerText = stok;
+            document.getElementById('stat-stok').innerText = inventory.reduce((a, b) => a + Number(b.stok || 0), 0);
             
-            if(currentUser.role === 'admin') {
-                const aset = inventory.reduce((a, b) => a + (Number(b.harga) * Number(b.stok)), 0);
-                const statAsetEl = document.getElementById('stat-aset');
-                if(statAsetEl) statAsetEl.innerText = "Rp " + aset.toLocaleString();
-            }
-        }
-
-        function renderInventory() {
-            if(currentUser.role !== 'admin') return;
-            const tbody = document.getElementById('table-barang-body');
-            tbody.innerHTML = inventory.map(i => `
-                <tr class="hover:bg-slate-50 transition">
-                    <td class="p-6">
-                        <div class="font-bold text-slate-800">${i.nama}</div>
-                        <div class="text-[10px] text-slate-400 font-mono">${i.id}</div>
-                    </td>
-                    <td class="p-6"><span class="text-xs bg-slate-100 px-3 py-1 rounded-full font-medium">${i.kategori || 'Umum'}</span></td>
-                    <td class="p-6 text-right font-bold text-slate-700">Rp ${Number(i.harga).toLocaleString()}</td>
-                    <td class="p-6 text-center">
-                        <span class="px-3 py-1 rounded-lg text-xs font-bold ${i.stok < 5 ? 'bg-red-100 text-red-600' : 'bg-orange-100 text-orange-700'}">
-                            ${i.stok}
-                        </span>
-                    </td>
-                    <td class="p-6 text-center">
-                        <button onclick="editBarang('${i.id}')" class="p-2 text-slate-400 hover:text-orange-600 transition"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
-                    </td>
+            document.getElementById('table-barang-body').innerHTML = inventory.map(i => `
+                <tr>
+                    <td class="p-4 font-bold">${i.nama}</td>
+                    <td class="p-4 text-sm">${i.kategori}</td>
+                    <td class="p-4 text-right">Rp ${Number(i.harga).toLocaleString()}</td>
+                    <td class="p-4 text-center">${i.stok}</td>
                 </tr>
             `).join('');
-            lucide.createIcons();
-        }
 
-        function renderCatalog() {
-            const container = document.getElementById('pos-items');
-            container.innerHTML = inventory.map(i => `
-                <div class="bg-white p-6 rounded-3xl border border-slate-100 hover:border-orange-500 hover:shadow-xl transition cursor-pointer group relative overflow-hidden" onclick="addToCart('${i.id}')">
-                    <div class="flex justify-between items-start relative z-10">
-                        <div>
-                            <span class="text-[10px] font-bold text-orange-500 uppercase tracking-widest">${i.kategori || 'Produk'}</span>
-                            <h4 class="font-bold text-slate-800 group-hover:text-orange-600 transition text-lg mt-1">${i.nama}</h4>
-                            <p class="text-slate-500 font-bold mt-2">Rp ${Number(i.harga).toLocaleString()}</p>
-                            <p class="text-[10px] text-slate-400 mt-1">Tersedia: ${i.stok} unit</p>
-                        </div>
-                        <div class="bg-slate-50 p-3 rounded-2xl group-hover:bg-orange-600 group-hover:text-white transition shadow-sm">
-                            <i data-lucide="plus" class="w-5 h-5"></i>
-                        </div>
-                    </div>
+            document.getElementById('pos-items').innerHTML = inventory.map(i => `
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 cursor-pointer" onclick="addToCart('${i.id}')">
+                    <p class="font-bold">${i.nama}</p>
+                    <p class="text-orange-600 text-sm">Rp ${Number(i.harga).toLocaleString()}</p>
+                    <p class="text-xs text-slate-400">Stok: ${i.stok}</p>
                 </div>
             `).join('');
-            lucide.createIcons();
         }
 
         function addToCart(id) {
-            const item = inventory.find(i => i.id === id);
-            const inCart = cart.find(c => c.id === id);
-            if(item.stok <= (inCart ? inCart.qty : 0)) {
-                alert("Stok barang tidak mencukupi.");
-                return;
-            }
+            const item = inventory.find(i => i.id == id);
+            if(item.stok <= 0) return alert("Stok habis!");
+            const inCart = cart.find(c => c.id == id);
             if(inCart) inCart.qty++; else cart.push({...item, qty: 1});
             renderCart();
         }
 
         function renderCart() {
-            const list = document.getElementById('cart-list');
             let total = 0;
-            list.innerHTML = cart.map(i => {
+            document.getElementById('cart-list').innerHTML = cart.map(i => {
                 total += i.harga * i.qty;
-                return `
-                    <div class="flex justify-between items-center bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                        <div class="flex-1">
-                            <p class="font-bold text-sm text-slate-800">${i.nama}</p>
-                            <p class="text-[10px] text-slate-500">${i.qty} x Rp ${Number(i.harga).toLocaleString()}</p>
-                        </div>
-                        <div class="flex items-center gap-2">
-                             <button onclick="updateQty('${i.id}', -1)" class="w-6 h-6 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-500">-</button>
-                             <span class="text-xs font-bold w-4 text-center">${i.qty}</span>
-                             <button onclick="updateQty('${i.id}', 1)" class="w-6 h-6 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-500">+</button>
-                        </div>
-                    </div>`;
-            }).join('') || '<div class="text-center py-10 text-slate-400 italic text-sm">Keranjang masih kosong</div>';
+                return `<div class="flex justify-between text-sm"><span>${i.nama} (x${i.qty})</span><span>Rp ${(i.harga*i.qty).toLocaleString()}</span></div>`;
+            }).join('');
             document.getElementById('cart-total').innerText = 'Rp ' + total.toLocaleString();
-        }
-
-        function updateQty(id, delta) {
-            const item = cart.find(c => c.id === id);
-            const inv = inventory.find(v => v.id === id);
-            if(item) {
-                if(delta > 0 && item.qty >= inv.stok) return;
-                item.qty += delta;
-                if(item.qty <= 0) cart = cart.filter(c => c.id !== id);
-                renderCart();
-            }
         }
 
         async function processOrder() {
             if(!cart.length) return;
-            showLoading(true, "Memproses...");
-            const msg = `*PESANAN BARU - MAQSHOF AL FARUQ*%0A---------------------------%0A` +
-                        `Pemesan: *${currentUser.nama || currentUser.username}*%0A%0A` +
-                        cart.map(i => `• ${i.nama} (x${i.qty}) - Rp ${(i.harga*i.qty).toLocaleString()}`).join('%0A') +
-                        `%0A%0A*Total Bayar: ${document.getElementById('cart-total').innerText}*%0A---------------------------%0A_Pesanan via Koperasi Digital_`;
-            
-            try {
-                await fetch(WEB_APP_URL, { 
-                    method: 'POST', 
-                    mode: 'no-cors', 
-                    body: JSON.stringify({ action: 'jual', user: currentUser.username, items: cart }) 
-                });
-                window.open(`https://wa.me/${ADMIN_WA}?text=${msg}`, '_blank');
-                cart = []; 
-                renderCart(); 
-                fetchData();
-            } catch(e) { alert("Terjadi kesalahan saat menyimpan pesanan."); }
-            showLoading(false);
-        }
-
-        function openModalBarang() {
-            document.getElementById('form-barang').reset();
-            document.getElementById('edit-id').value = '';
-            document.getElementById('modal-title').innerText = "Tambah Barang";
-            toggleModal('modal-barang');
-        }
-
-        function editBarang(id) {
-            const i = inventory.find(b => b.id === id);
-            if(!i) return;
-            document.getElementById('edit-id').value = i.id;
-            document.getElementById('input-nama').value = i.nama;
-            document.getElementById('input-kategori').value = i.kategori || '';
-            document.getElementById('input-harga').value = i.harga;
-            document.getElementById('input-stok').value = i.stok;
-            document.getElementById('modal-title').innerText = "Edit Barang";
-            toggleModal('modal-barang');
-        }
-
-        async function saveBarang(e) {
-            e.preventDefault();
-            const data = {
-                action: 'saveBarang',
-                id: document.getElementById('edit-id').value,
-                nama: document.getElementById('input-nama').value,
-                kategori: document.getElementById('input-kategori').value,
-                harga: document.getElementById('input-harga').value,
-                stok: document.getElementById('input-stok').value
-            };
             showLoading(true, "Menyimpan...");
             try {
-                await fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
-                toggleModal('modal-barang');
-                fetchData();
-            } catch(e) { alert("Gagal menyimpan data."); }
+                await fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'jual', user: currentUser.username, items: cart }) });
+                window.open(`https://wa.me/6285154989545?text=Pesanan Baru dari ${currentUser.nama}`, '_blank');
+                cart = []; renderCart(); fetchData();
+            } catch(e) { alert("Gagal"); }
             showLoading(false);
         }
 
-        function toggleModal(id) { document.getElementById(id).classList.toggle('hidden'); }
-        function showLoading(s, txt) { 
-            document.getElementById('loading').style.display = s ? 'flex' : 'none'; 
-            document.getElementById('loading-text').innerText = txt;
+        function showPage(p) {
+            document.querySelectorAll('.page-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById('page-' + p).classList.remove('hidden');
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('nav-active'));
+            document.getElementById('nav-' + p).classList.add('nav-active');
         }
-        function handleLogout() { location.reload(); }
 
-        window.onload = () => lucide.createIcons();
+        function showLoading(s, t) { document.getElementById('loading').style.display = s ? 'flex' : 'none'; document.getElementById('loading-text').innerText = t; }
     </script>
 </body>
 </html>

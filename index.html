@@ -1,498 +1,366 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Maqshof Al Faruq - Koperasi Digital</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
-        body { font-family: 'Inter', sans-serif; }
-        .nav-active { background-color: #1e293b; border-left: 4px solid #f97316; color: #fb923c !important; }
-        .loading-screen { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.8); z-index: 100; align-items: center; justify-content: center; flex-direction: column; }
-        /* Animasi halus untuk icon */
-        i { vertical-align: middle; }
-    </style>
-</head>
-<body class="bg-slate-50 text-slate-800">
+import React, { useState, useEffect } from 'react';
+import { 
+  ShoppingBag, LayoutDashboard, Package, ShoppingCart, 
+  LogOut, Plus, Send, Edit3, Store, ShoppingBasket,
+  ChevronRight, Search, User
+} from 'lucide-react';
 
-    <!-- Loading Overlay -->
-    <div id="loading" class="loading-screen">
-        <div class="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
-        <p class="mt-4 font-bold text-slate-600" id="loading-text">Memproses...</p>
-    </div>
+// URL Web App dari Google Apps Script Anda (DIPERBARUI)
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwrLBxuyWeQ1OcebLeHzHKYlAaZYy3jaGOOxB1A_BxVnMVQzGhrSBTFTkJo-iFn0oXA/exec";
+const ADMIN_WA = "6285154989545";
 
-    <!-- AUTH SCREEN -->
-    <div id="screen-auth" class="min-h-screen flex items-center justify-center p-4 bg-slate-900">
-        <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md">
-            <div class="text-center mb-8">
-                <div class="bg-orange-100 w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-inner">
-                    <!-- Icon Store dari Lucide -->
-                    <i data-lucide="store" class="text-orange-600 w-10 h-10"></i>
-                </div>
-                <h1 id="auth-title" class="text-2xl font-black tracking-tight text-slate-800">Maqshof Al Faruq</h1>
-                <p class="text-slate-500 text-sm">Koperasi Santri Digital</p>
+export default function App() {
+  const [screen, setScreen] = useState('auth');
+  const [authMode, setAuthMode] = useState('login');
+  const [currentUser, setCurrentUser] = useState(null);
+  const [page, setPage] = useState('dashboard');
+  const [inventory, setInventory] = useState([]);
+  const [cart, setCart] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadingText, setLoadingText] = useState('Memproses...');
+  const [modalOpen, setModalOpen] = useState(false);
+  const [formData, setFormData] = useState({ id: '', nama: '', kategori: '', harga: '', stok: '' });
+
+  // Load data awal
+  useEffect(() => {
+    if (currentUser) {
+      fetchData();
+    }
+  }, [currentUser]);
+
+  const fetchData = async () => {
+    setIsLoading(true);
+    setLoadingText('Mengambil data...');
+    try {
+      const res = await fetch(WEB_APP_URL);
+      if (!res.ok) throw new Error("Network response was not ok");
+      const data = await res.json();
+      setInventory(data);
+    } catch (e) {
+      console.error("Gagal mengambil data, pastikan URL GAS benar.", e);
+    }
+    setIsLoading(false);
+  };
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    const u = e.target.username.value;
+    const p = e.target.password.value;
+    setIsLoading(true);
+    setLoadingText('Memverifikasi...');
+    try {
+      const res = await fetch(`${WEB_APP_URL}?action=login&u=${u}&p=${p}`);
+      const result = await res.json();
+      if (result.status === "success") {
+        setCurrentUser(result.user);
+        setScreen('main');
+      } else {
+        alert("Username atau password salah!");
+      }
+    } catch (err) {
+      alert("Gagal terhubung ke database. Pastikan koneksi internet stabil.");
+    }
+    setIsLoading(false);
+  };
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    const data = {
+      action: 'register',
+      nama: e.target.reg_name.value,
+      username: e.target.reg_username.value,
+      password: e.target.reg_password.value
+    };
+    setIsLoading(true);
+    setLoadingText('Mendaftarkan...');
+    try {
+      await fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
+      alert("Berhasil daftar! Silakan login.");
+      setAuthMode('login');
+    } catch (err) {
+      alert("Terjadi kesalahan pendaftaran.");
+    }
+    setIsLoading(false);
+  };
+
+  const saveBarang = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    const data = { action: 'saveBarang', ...formData };
+    try {
+      await fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
+      setModalOpen(false);
+      setTimeout(fetchData, 1000);
+    } catch (e) {
+      alert("Gagal menyimpan.");
+    }
+    setIsLoading(false);
+  };
+
+  const addToCart = (item) => {
+    const inCart = cart.find(c => c.id === item.id);
+    if (item.stok <= (inCart ? inCart.qty : 0)) return alert("Stok habis!");
+    if (inCart) {
+      setCart(cart.map(c => c.id === item.id ? { ...c, qty: c.qty + 1 } : c));
+    } else {
+      setCart([...cart, { ...item, qty: 1 }]);
+    }
+  };
+
+  const processOrder = async () => {
+    if (!cart.length) return;
+    setIsLoading(true);
+    setLoadingText('Menyimpan pesanan...');
+    const totalHarga = cart.reduce((a, b) => a + (b.harga * b.qty), 0);
+    const detailMsg = cart.map(i => `- ${i.nama} [${i.kategori}] (x${i.qty})`).join('%0A');
+    const waMsg = `Halo Admin, pesanan dari *${currentUser.nama}*:%0A${detailMsg}%0A%0A*Total: Rp ${totalHarga.toLocaleString()}*`;
+    
+    try {
+      await fetch(WEB_APP_URL, { 
+        method: 'POST', 
+        mode: 'no-cors', 
+        body: JSON.stringify({ action: 'jual', user: currentUser.nama, items: cart }) 
+      });
+      window.open(`https://wa.me/${ADMIN_WA}?text=${waMsg}`, '_blank');
+      setCart([]);
+      setTimeout(fetchData, 1000);
+      setPage('dashboard');
+    } catch (e) {
+      alert("Gagal memproses pesanan.");
+    }
+    setIsLoading(false);
+  };
+
+  if (screen === 'auth') {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+        {isLoading && <LoadingOverlay text={loadingText} />}
+        <div className="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md">
+          <div className="text-center mb-8">
+            <div className="bg-orange-100 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <ShoppingBag className="text-orange-600 w-8 h-8" />
             </div>
+            <h1 className="text-2xl font-bold">{authMode === 'login' ? 'Maqshof Digital' : 'Daftar Anggota'}</h1>
+            <p className="text-slate-500 text-sm">Sistem Koperasi Terintegrasi</p>
+          </div>
 
-            <form id="form-login" onsubmit="handleLogin(event)" class="space-y-4">
-                <div class="relative">
-                    <i data-lucide="user" class="absolute left-4 top-4 text-slate-400 w-5 h-5"></i>
-                    <input type="text" id="login-u" placeholder="Username" required class="w-full p-4 pl-12 bg-slate-50 border rounded-2xl outline-none focus:ring-2 focus:ring-orange-500 transition-all">
-                </div>
-                <div class="relative">
-                    <i data-lucide="lock" class="absolute left-4 top-4 text-slate-400 w-5 h-5"></i>
-                    <input type="password" id="login-p" placeholder="Password" required class="w-full p-4 pl-12 bg-slate-50 border rounded-2xl outline-none focus:ring-2 focus:ring-orange-500 transition-all">
-                </div>
-                <button type="submit" class="w-full bg-orange-600 text-white py-4 rounded-2xl font-bold shadow-lg hover:bg-orange-700 transition transform active:scale-95">Masuk</button>
-                <p class="text-center text-sm text-slate-500">Belum punya akun? <button type="button" onclick="toggleAuth(true)" class="text-orange-600 font-bold">Daftar</button></p>
+          {authMode === 'login' ? (
+            <form onSubmit={handleLogin} className="space-y-4">
+              <input type="text" name="username" placeholder="Username" required className="w-full p-4 bg-slate-50 border rounded-2xl outline-none focus:ring-2 focus:ring-orange-500" />
+              <input type="password" name="password" placeholder="Password" required className="w-full p-4 bg-slate-50 border rounded-2xl outline-none focus:ring-2 focus:ring-orange-500" />
+              <button className="w-full bg-orange-600 text-white py-4 rounded-2xl font-bold hover:bg-orange-700 transition">Masuk</button>
+              <p className="text-center text-sm">Belum punya akun? <button type="button" onClick={() => setAuthMode('register')} className="text-orange-600 font-bold">Daftar</button></p>
             </form>
-
-            <form id="form-reg" onsubmit="handleRegister(event)" class="space-y-4 hidden">
-                <input type="text" id="reg-nama" placeholder="Nama Lengkap" required class="w-full p-4 bg-slate-50 border rounded-2xl outline-none focus:ring-2 focus:ring-orange-500">
-                <input type="text" id="reg-u" placeholder="Username" required class="w-full p-4 bg-slate-50 border rounded-2xl outline-none focus:ring-2 focus:ring-orange-500">
-                <input type="password" id="reg-p" placeholder="Password" required class="w-full p-4 bg-slate-50 border rounded-2xl outline-none focus:ring-2 focus:ring-orange-500">
-                <button type="submit" class="w-full bg-slate-800 text-white py-4 rounded-2xl font-bold shadow-lg hover:bg-slate-700 transition">Daftar Sekarang</button>
-                <p class="text-center text-sm text-slate-500">Sudah punya akun? <button type="button" onclick="toggleAuth(false)" class="text-orange-600 font-bold">Login</button></p>
+          ) : (
+            <form onSubmit={handleRegister} className="space-y-4">
+              <input type="text" name="reg_name" placeholder="Nama Lengkap" required className="w-full p-4 bg-slate-50 border rounded-2xl outline-none focus:ring-2 focus:ring-orange-500" />
+              <input type="text" name="reg_username" placeholder="Username Baru" required className="w-full p-4 bg-slate-50 border rounded-2xl outline-none focus:ring-2 focus:ring-orange-500" />
+              <input type="password" name="reg_password" placeholder="Password" required className="w-full p-4 bg-slate-50 border rounded-2xl outline-none focus:ring-2 focus:ring-orange-500" />
+              <button className="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold hover:bg-slate-800 transition">Buat Akun</button>
+              <button type="button" onClick={() => setAuthMode('login')} className="w-full text-slate-400 font-bold py-2">Kembali ke Login</button>
             </form>
+          )}
         </div>
-    </div>
+      </div>
+    );
+  }
 
-    <!-- MAIN APP SCREEN -->
-    <div id="screen-main" class="hidden flex h-screen overflow-hidden">
-        <!-- Sidebar -->
-        <aside class="w-64 bg-slate-900 text-white hidden md:flex flex-col">
-            <div class="p-6 border-b border-slate-800 flex items-center gap-3">
-                <div class="bg-orange-500 p-2 rounded-lg">
-                    <i data-lucide="shopping-bag" class="text-white w-5 h-5"></i>
-                </div>
-                <span class="font-bold tracking-tight">MAQSHOF APP</span>
-            </div>
-            <nav class="flex-1 p-4 space-y-2">
-                <button onclick="showPage('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 transition">
-                    <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard
-                </button>
-                <button onclick="showPage('barang')" id="nav-barang" class="nav-btn admin-only hidden w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 transition">
-                    <i data-lucide="package" class="w-5 h-5"></i> Kelola Stok
-                </button>
-                <button onclick="showPage('pesan')" id="nav-pesan" class="nav-btn user-only w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 transition">
-                    <i data-lucide="shopping-cart" class="w-5 h-5"></i> Pesan Barang
-                </button>
-            </nav>
-            <div class="p-6 border-t border-slate-800">
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="w-10 h-10 bg-gradient-to-tr from-orange-600 to-orange-400 rounded-full flex items-center justify-center font-bold text-white shadow-lg" id="user-initial">A</div>
-                    <div class="overflow-hidden">
-                        <p class="text-sm font-bold truncate text-white" id="user-name">Nama User</p>
-                        <p class="text-[10px] uppercase text-slate-500 font-black tracking-widest" id="user-role">Role</p>
-                    </div>
-                </div>
-                <button onclick="location.reload()" class="w-full flex items-center gap-2 text-red-400 text-xs hover:bg-red-500/10 p-2 rounded-lg transition">
-                    <i data-lucide="log-out" class="w-4 h-4"></i> Keluar Aplikasi
-                </button>
-            </div>
-        </aside>
-
-        <!-- Main Content -->
-        <main class="flex-1 flex flex-col overflow-hidden">
-            <header class="bg-white border-b p-4 px-8 flex justify-between items-center shadow-sm z-10">
-                <h2 id="page-title" class="text-xl font-bold text-slate-700 capitalize tracking-tight">Dashboard</h2>
-                <div class="flex items-center gap-4">
-                    <div class="flex items-center gap-2 bg-green-50 px-3 py-1 rounded-full border border-green-100">
-                        <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                        <span class="text-green-700 text-[10px] font-black uppercase tracking-widest">Sistem Online</span>
-                    </div>
-                </div>
-            </header>
-
-            <div class="flex-1 overflow-y-auto p-6 md:p-8 bg-slate-50">
-                <!-- Page: Dashboard -->
-                <div id="page-dashboard" class="page-content space-y-8 animate-in fade-in duration-500">
-                    <div class="bg-slate-900 text-white p-10 rounded-[40px] relative overflow-hidden shadow-2xl">
-                        <div class="relative z-10">
-                            <h3 class="text-3xl font-bold">Ahlan wa Sahlan! 👋</h3>
-                            <p class="text-slate-400 mt-2 max-w-sm">Selamat datang di layanan Koperasi Maqshof Al Faruq Majenang.</p>
-                        </div>
-                        <i data-lucide="store" class="absolute right-[-20px] bottom-[-20px] w-64 h-64 text-white/5 rotate-12"></i>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4">
-                            <div class="p-4 bg-blue-50 text-blue-600 rounded-2xl"><i data-lucide="box"></i></div>
-                            <div>
-                                <p class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Total Produk</p>
-                                <h4 id="stat-barang" class="text-3xl font-black text-slate-800">0</h4>
-                            </div>
-                        </div>
-                        <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4">
-                            <div class="p-4 bg-orange-50 text-orange-600 rounded-2xl"><i data-lucide="check-circle-2"></i></div>
-                            <div>
-                                <p class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Barang Ready</p>
-                                <h4 id="stat-stok" class="text-3xl font-black text-orange-600">0</h4>
-                            </div>
-                        </div>
-                        <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4">
-                            <div class="p-4 bg-purple-50 text-purple-600 rounded-2xl"><i data-lucide="shield-check"></i></div>
-                            <div>
-                                <p class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Status Akun</p>
-                                <h4 id="stat-role" class="text-2xl font-black text-slate-800 uppercase">-</h4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Page: Kelola Stok (Admin Only) -->
-                <div id="page-barang" class="page-content hidden admin-only animate-in slide-in-from-bottom-4 duration-500">
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 class="font-bold text-lg flex items-center gap-2"><i data-lucide="package" class="text-orange-500"></i> Inventori Maqshof</h3>
-                        <button onclick="openModal()" class="bg-orange-600 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:bg-orange-700 shadow-lg transition transform hover:-translate-y-0.5">
-                            <i data-lucide="plus" class="w-4 h-4"></i> Tambah Baru
-                        </button>
-                    </div>
-                    <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left">
-                                <thead class="bg-slate-50 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                                    <tr>
-                                        <th class="p-6">Produk</th>
-                                        <th class="p-6">Kategori</th>
-                                        <th class="p-6 text-right">Harga</th>
-                                        <th class="p-6 text-center">Stok</th>
-                                        <th class="p-6 text-center">Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="table-barang" class="divide-y divide-slate-50"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Page: Pesan Barang (User Only) -->
-                <div id="page-pesan" class="page-content hidden user-only animate-in slide-in-from-bottom-4 duration-500">
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        <div class="lg:col-span-2 space-y-6">
-                            <div class="relative group">
-                                <i data-lucide="search" class="absolute left-4 top-4 text-slate-400 w-5 h-5 group-focus-within:text-orange-500 transition"></i>
-                                <input type="text" onkeyup="filterItems(this.value)" placeholder="Cari makanan atau minuman..." class="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-orange-500 shadow-sm transition-all">
-                            </div>
-                            <div id="katalog-items" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-                        </div>
-                        <div class="lg:col-span-1">
-                            <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-xl sticky top-4">
-                                <h4 class="font-bold border-b border-slate-50 pb-4 mb-4 flex items-center gap-2 text-slate-700">
-                                    <i data-lucide="shopping-basket" class="text-orange-500"></i> Keranjang
-                                </h4>
-                                <div id="cart-items" class="space-y-3 mb-6 max-h-80 overflow-y-auto pr-2 custom-scrollbar"></div>
-                                <div class="border-t border-slate-50 pt-4">
-                                    <div class="flex justify-between items-end mb-4">
-                                        <span class="text-slate-400 text-xs font-bold uppercase tracking-widest">Total Bayar</span>
-                                        <span id="cart-total" class="text-2xl font-black text-slate-800">Rp 0</span>
-                                    </div>
-                                    <button onclick="checkout()" class="w-full bg-green-600 text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-green-700 transition shadow-lg shadow-green-100 transform active:scale-95">
-                                        <i data-lucide="send" class="w-5 h-5"></i> Kirim Pesanan (WA)
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </main>
-    </div>
-
-    <!-- Modal Form (Admin) -->
-    <div id="modal-form" class="fixed inset-0 bg-slate-900/60 hidden z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white p-8 rounded-[32px] w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
-            <h3 id="modal-title" class="text-xl font-bold mb-6 text-slate-800 flex items-center gap-2">
-                <i data-lucide="edit-3" class="text-orange-500"></i> Detail Barang
-            </h3>
-            <form onsubmit="saveBarang(event)" class="space-y-4">
-                <input type="hidden" id="f-id">
-                <div class="space-y-1">
-                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-2 tracking-widest">Nama Produk</label>
-                    <input type="text" id="f-nama" required class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-orange-500">
-                </div>
-                <div class="space-y-1">
-                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-2 tracking-widest">Kategori</label>
-                    <input type="text" id="f-kat" required placeholder="Snack, Minuman, dsb" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-orange-500">
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="space-y-1">
-                        <label class="text-[10px] font-bold text-slate-400 uppercase ml-2 tracking-widest">Harga (Rp)</label>
-                        <input type="number" id="f-harga" required class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-orange-500">
-                    </div>
-                    <div class="space-y-1">
-                        <label class="text-[10px] font-bold text-slate-400 uppercase ml-2 tracking-widest">Stok</label>
-                        <input type="number" id="f-stok" required class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-orange-500">
-                    </div>
-                </div>
-                <div class="flex gap-3 pt-6">
-                    <button type="button" onclick="closeModal()" class="flex-1 font-bold text-slate-400 py-4 hover:text-slate-600 transition">Batal</button>
-                    <button type="submit" class="flex-[2] bg-slate-900 text-white font-bold py-4 rounded-2xl shadow-lg hover:bg-slate-800 transition">Simpan Data</button>
-                </div>
-            </form>
+  return (
+    <div className="flex h-screen bg-slate-50">
+      {isLoading && <LoadingOverlay text={loadingText} />}
+      
+      {/* Sidebar */}
+      <aside className="w-64 bg-slate-900 text-white hidden md:flex flex-col">
+        <div className="p-6 border-b border-slate-800 flex items-center gap-3">
+          <ShoppingBag className="text-orange-500" />
+          <span className="font-bold text-lg">Maqshof Al Faruq</span>
         </div>
-    </div>
+        <nav className="flex-1 p-4 space-y-2">
+          <NavItem active={page === 'dashboard'} onClick={() => setPage('dashboard')} icon={<LayoutDashboard size={20}/>} label="Dashboard" />
+          {currentUser.role === 'admin' && (
+            <NavItem active={page === 'barang'} onClick={() => setPage('barang')} icon={<Package size={20}/>} label="Kelola Stok" />
+          )}
+          <NavItem active={page === 'penjualan'} onClick={() => setPage('penjualan')} icon={<ShoppingCart size={20}/>} label="Pesan Barang" />
+        </nav>
+        <div className="p-4 border-t border-slate-800">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center font-bold">{currentUser.nama[0]}</div>
+            <div className="overflow-hidden">
+              <p className="text-sm font-bold truncate">{currentUser.nama}</p>
+              <p className="text-[10px] uppercase text-slate-400">{currentUser.role}</p>
+            </div>
+          </div>
+          <button onClick={() => setScreen('auth')} className="flex items-center gap-2 text-red-400 text-sm hover:bg-red-500/10 w-full p-2 rounded-lg transition">
+            <LogOut size={16} /> Keluar
+          </button>
+        </div>
+      </aside>
 
-    <script>
-        // --- KONFIGURASI ---
-        const API_URL = "https://script.google.com/macros/s/AKfycbwrLBxuyWeQ1OcebLeHzHKYlAaZYy3jaGOOxB1A_BxVnMVQzGhrSBTFTkJo-iFn0oXA/exec"; 
-        const WA_ADMIN = "6285154989545";
+      {/* Content */}
+      <main className="flex-1 flex flex-col overflow-hidden">
+        <header className="bg-white border-b p-4 flex justify-between items-center px-8">
+          <h2 className="text-xl font-bold text-slate-700 capitalize">{page}</h2>
+          <div className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div> Online
+          </div>
+        </header>
 
-        let user = null;
-        let db = [];
-        let cart = [];
-
-        // Inisialisasi Lucide saat pertama kali load
-        window.addEventListener('DOMContentLoaded', () => {
-            lucide.createIcons();
-        });
-
-        // Helper untuk me-refresh icon
-        function refreshIcons() {
-            setTimeout(() => lucide.createIcons(), 50);
-        }
-
-        // --- AUTH LOGIC ---
-        function toggleAuth(reg) {
-            document.getElementById('form-login').classList.toggle('hidden', reg);
-            document.getElementById('form-reg').classList.toggle('hidden', !reg);
-            document.getElementById('auth-title').innerText = reg ? "Daftar Anggota" : "Maqshof Al Faruq";
-            refreshIcons();
-        }
-
-        async function handleLogin(e) {
-            e.preventDefault();
-            const u = document.getElementById('login-u').value;
-            const p = document.getElementById('login-p').value;
-            setLoader(true, "Mengecek akun...");
-            try {
-                const res = await fetch(`${API_URL}?action=login&u=${u}&p=${p}`);
-                const data = await res.json();
-                if(data.status === "success") {
-                    user = data.user;
-                    startApp();
-                } else { alert("Login gagal! Cek username/password."); }
-            } catch(e) { alert("Kesalahan koneksi ke server."); }
-            setLoader(false);
-        }
-
-        async function handleRegister(e) {
-            e.preventDefault();
-            const body = {
-                action: 'register',
-                nama: document.getElementById('reg-nama').value,
-                username: document.getElementById('reg-u').value,
-                password: document.getElementById('reg-p').value
-            };
-            setLoader(true, "Mendaftarkan...");
-            try {
-                await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(body) });
-                alert("Berhasil Daftar! Silakan Login.");
-                toggleAuth(false);
-            } catch(e) { alert("Gagal mendaftar."); }
-            setLoader(false);
-        }
-
-        // --- APP LOGIC ---
-        function startApp() {
-            document.getElementById('screen-auth').classList.add('hidden');
-            document.getElementById('screen-main').classList.remove('hidden');
-            document.getElementById('user-name').innerText = user.nama;
-            document.getElementById('user-role').innerText = user.role;
-            document.getElementById('stat-role').innerText = user.role;
-            document.getElementById('user-initial').innerText = user.nama[0].toUpperCase();
-
-            const isAdmin = user.role === 'admin';
-            document.querySelectorAll('.admin-only').forEach(el => el.classList.toggle('hidden', !isAdmin));
-            document.querySelectorAll('.user-only').forEach(el => el.classList.toggle('hidden', isAdmin));
-
-            fetchData();
-            showPage('dashboard');
-        }
-
-        async function fetchData() {
-            setLoader(true, "Sinkronisasi data...");
-            try {
-                const res = await fetch(API_URL);
-                db = await res.json();
-                renderUI();
-            } catch(e) { console.error(e); }
-            setLoader(false);
-        }
-
-        function renderUI() {
-            document.getElementById('stat-barang').innerText = db.length;
-            document.getElementById('stat-stok').innerText = db.reduce((a, b) => a + Number(b.stok), 0);
-
-            const table = document.getElementById('table-barang');
-            table.innerHTML = db.map(i => `
-                <tr class="hover:bg-slate-50 transition">
-                    <td class="p-6 font-bold text-slate-800">${i.nama}</td>
-                    <td class="p-6"><span class="bg-slate-100 text-[10px] px-2.5 py-1 rounded-full font-bold uppercase text-slate-500 tracking-wider">${i.kategori}</span></td>
-                    <td class="p-6 text-right font-bold text-orange-600">Rp ${Number(i.harga).toLocaleString()}</td>
-                    <td class="p-6 text-center">
-                        <span class="px-3 py-1 rounded-lg ${i.stok > 5 ? 'bg-slate-100 text-slate-700' : 'bg-red-50 text-red-600'} font-mono font-bold">${i.stok}</span>
-                    </td>
-                    <td class="p-6 text-center">
-                        <button onclick='editItem(${JSON.stringify(i)})' class="p-2 bg-slate-50 text-slate-400 hover:text-orange-600 hover:bg-orange-50 rounded-xl transition">
-                            <i data-lucide="edit-3" class="w-4 h-4"></i>
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
-
-            renderKatalog(db);
-            refreshIcons();
-        }
-
-        function renderKatalog(items) {
-            const container = document.getElementById('katalog-items');
-            container.innerHTML = items.map(i => `
-                <div onclick="addToCart('${i.id}', '${i.nama.replace(/'/g,"")}', ${i.harga}, ${i.stok})" class="bg-white p-6 rounded-[32px] border border-slate-100 hover:border-orange-500 transition-all cursor-pointer group shadow-sm hover:shadow-xl hover:shadow-orange-500/10 active:scale-95 duration-200">
-                    <div class="flex justify-between items-start mb-2">
-                        <div class="flex-1">
-                            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1 block">${i.kategori}</span>
-                            <h4 class="font-bold text-slate-800 group-hover:text-orange-600 transition truncate pr-2">${i.nama}</h4>
-                        </div>
-                        <div class="bg-slate-50 p-3 rounded-2xl group-hover:bg-orange-500 group-hover:text-white transition shadow-sm">
-                            <i data-lucide="plus-circle" class="w-5 h-5"></i>
-                        </div>
+        <div className="flex-1 overflow-y-auto p-8">
+          {page === 'dashboard' && <DashboardView inventory={inventory} user={currentUser} />}
+          {page === 'barang' && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-bold">Data Barang Koperasi</h3>
+                <button onClick={() => { setFormData({id:'', nama:'', kategori:'', harga:'', stok:''}); setModalOpen(true); }} className="bg-slate-900 text-white px-4 py-2 rounded-xl flex items-center gap-2">
+                  <Plus size={18} /> Tambah Barang
+                </button>
+              </div>
+              <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
+                <table className="w-full text-left">
+                  <thead className="bg-slate-50 text-slate-400 text-xs uppercase font-bold">
+                    <tr>
+                      <th className="p-4">Produk</th>
+                      <th className="p-4">Kategori</th>
+                      <th className="p-4 text-right">Harga</th>
+                      <th className="p-4 text-center">Stok</th>
+                      <th className="p-4 text-center">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {inventory.map(i => (
+                      <tr key={i.id} className="hover:bg-slate-50">
+                        <td className="p-4 font-bold">{i.nama}</td>
+                        <td className="p-4"><span className="text-xs bg-slate-100 px-2 py-1 rounded text-slate-500">{i.kategori}</span></td>
+                        <td className="p-4 text-right font-mono">Rp {Number(i.harga).toLocaleString()}</td>
+                        <td className="p-4 text-center font-bold text-orange-600">{i.stok}</td>
+                        <td className="p-4 text-center">
+                          <button onClick={() => { setFormData(i); setModalOpen(true); }} className="text-slate-400 hover:text-slate-900"><Edit3 size={16}/></button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+          {page === 'penjualan' && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 h-fit">
+                {inventory.map(i => (
+                  <div key={i.id} onClick={() => addToCart(i)} className="bg-white p-4 rounded-2xl border hover:border-orange-500 cursor-pointer transition group shadow-sm">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <span className="text-[10px] uppercase font-bold text-slate-400">{i.kategori}</span>
+                        <h4 className="font-bold text-slate-800 group-hover:text-orange-600 transition">{i.nama}</h4>
+                        <p className="text-sm font-black text-slate-500 mt-1">Rp {Number(i.harga).toLocaleString()}</p>
+                      </div>
+                      <div className="bg-slate-100 p-2 rounded-lg group-hover:bg-orange-500 group-hover:text-white"><Plus size={16}/></div>
                     </div>
-                    <div class="flex items-end justify-between mt-4">
-                        <p class="text-orange-600 font-black text-2xl">Rp ${Number(i.harga).toLocaleString()}</p>
-                        <div class="text-[10px] font-black uppercase tracking-tighter ${i.stok > 0 ? 'text-green-500' : 'text-red-500'}">
-                            Stok: ${i.stok}
-                        </div>
-                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="bg-white p-6 rounded-3xl shadow-xl h-fit border border-slate-100">
+                <h3 className="font-bold flex items-center gap-2 mb-4"><ShoppingBasket className="text-orange-500"/> Keranjang Belanja</h3>
+                <div className="space-y-2 mb-6 max-h-[300px] overflow-y-auto">
+                  {cart.length === 0 ? <p className="text-center text-slate-300 italic text-sm py-4">Belum ada barang</p> : 
+                    cart.map(c => (
+                      <div key={c.id} className="flex justify-between bg-slate-50 p-3 rounded-xl">
+                        <div><p className="font-bold text-xs">{c.nama}</p><p className="text-[10px] text-slate-400">{c.qty} x Rp {c.harga.toLocaleString()}</p></div>
+                        <b className="text-xs">Rp {(c.harga*c.qty).toLocaleString()}</b>
+                      </div>
+                    ))
+                  }
                 </div>
-            `).join('') || '<div class="col-span-2 py-10 text-center text-slate-400">Barang tidak ditemukan...</div>';
-            refreshIcons();
-        }
+                <div className="border-t pt-4">
+                  <div className="flex justify-between items-end mb-4">
+                    <span className="text-slate-400 text-sm">Total</span>
+                    <span className="text-2xl font-black">Rp {cart.reduce((a,b) => a+(b.harga*b.qty),0).toLocaleString()}</span>
+                  </div>
+                  <button onClick={processOrder} className="w-full bg-green-600 text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-green-700 transition shadow-lg shadow-green-100">
+                    <Send size={18}/> Kirim ke WhatsApp
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </main>
 
-        function filterItems(v) {
-            const filtered = db.filter(i => i.nama.toLowerCase().includes(v.toLowerCase()));
-            renderKatalog(filtered);
-        }
+      {/* Modal Barang */}
+      {modalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white p-8 rounded-3xl max-w-md w-full shadow-2xl">
+            <h3 className="text-xl font-bold mb-6">Formulir Barang</h3>
+            <form onSubmit={saveBarang} className="space-y-4">
+              <input type="text" placeholder="Nama Barang" value={formData.nama} onChange={e=>setFormData({...formData, nama: e.target.value})} className="w-full p-4 bg-slate-50 border rounded-2xl" required />
+              <input type="text" placeholder="Kategori (Misal: Sembako)" value={formData.kategori} onChange={e=>setFormData({...formData, kategori: e.target.value})} className="w-full p-4 bg-slate-50 border rounded-2xl" required />
+              <div className="grid grid-cols-2 gap-4">
+                <input type="number" placeholder="Harga" value={formData.harga} onChange={e=>setFormData({...formData, harga: e.target.value})} className="w-full p-4 bg-slate-50 border rounded-2xl" required />
+                <input type="number" placeholder="Stok" value={formData.stok} onChange={e=>setFormData({...formData, stok: e.target.value})} className="w-full p-4 bg-slate-50 border rounded-2xl" required />
+              </div>
+              <div className="flex gap-2 pt-4">
+                <button type="button" onClick={()=>setModalOpen(false)} className="flex-1 py-4 text-slate-400 font-bold">Batal</button>
+                <button type="submit" className="flex-[2] bg-slate-900 text-white py-4 rounded-2xl font-bold">Simpan Data</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
-        // --- ADMIN FUNCTIONS ---
-        function openModal() {
-            document.getElementById('f-id').value = "";
-            document.getElementById('f-nama').value = "";
-            document.getElementById('f-kat').value = "";
-            document.getElementById('f-harga').value = "";
-            document.getElementById('f-stok').value = "";
-            document.getElementById('modal-title').innerText = "Tambah Barang";
-            document.getElementById('modal-form').classList.remove('hidden');
-            refreshIcons();
-        }
+function NavItem({ active, onClick, icon, label }) {
+  return (
+    <button onClick={onClick} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${active ? 'bg-slate-800 text-orange-500 font-bold border-l-4 border-orange-500' : 'text-slate-400 hover:bg-slate-800'}`}>
+      {icon} {label}
+    </button>
+  );
+}
 
-        function editItem(i) {
-            document.getElementById('f-id').value = i.id;
-            document.getElementById('f-nama').value = i.nama;
-            document.getElementById('f-kat').value = i.kategori;
-            document.getElementById('f-harga').value = i.harga;
-            document.getElementById('f-stok').value = i.stok;
-            document.getElementById('modal-title').innerText = "Edit Barang";
-            document.getElementById('modal-form').classList.remove('hidden');
-            refreshIcons();
-        }
+function LoadingOverlay({ text }) {
+  return (
+    <div className="fixed inset-0 bg-white/80 z-[9999] flex flex-col items-center justify-center">
+      <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+      <p className="font-bold text-slate-600">{text}</p>
+    </div>
+  );
+}
 
-        function closeModal() { document.getElementById('modal-form').classList.add('hidden'); }
+function DashboardView({ inventory, user }) {
+  const totalBarang = inventory.length;
+  const totalStok = inventory.reduce((a, b) => a + Number(b.stok), 0);
+  const totalAset = inventory.reduce((a, b) => a + (Number(b.harga) * Number(b.stok)), 0);
 
-        async function saveBarang(e) {
-            e.preventDefault();
-            const body = {
-                action: 'saveBarang',
-                id: document.getElementById('f-id').value,
-                nama: document.getElementById('f-nama').value,
-                kategori: document.getElementById('f-kat').value,
-                harga: document.getElementById('f-harga').value,
-                stok: document.getElementById('f-stok').value
-            };
-            setLoader(true, "Menyimpan...");
-            try {
-                await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(body) });
-                closeModal();
-                fetchData();
-            } catch(e) { alert("Gagal simpan."); }
-            setLoader(false);
-        }
+  return (
+    <div className="space-y-8">
+      <div className="bg-slate-900 text-white p-8 rounded-3xl relative overflow-hidden">
+        <div className="relative z-10">
+          <h1 className="text-3xl font-bold">Selamat Datang, {user.nama}! 👋</h1>
+          <p className="text-slate-400 mt-2 max-w-sm">Siap melayani kebutuhan anggota koperasi hari ini? Akses menu di samping untuk mulai bekerja.</p>
+        </div>
+        <Store size={200} className="absolute right-[-40px] bottom-[-40px] text-white/5" />
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <StatCard title="Total Produk" value={totalBarang} color="slate" />
+        <StatCard title="Total Stok" value={totalStok} color="blue" />
+        <StatCard title="Nilai Aset" value={`Rp ${totalAset.toLocaleString()}`} color="green" />
+      </div>
+    </div>
+  );
+}
 
-        // --- USER FUNCTIONS ---
-        function addToCart(id, nama, harga, stokMax) {
-            const inCart = cart.find(c => c.id === id);
-            if(inCart) {
-                if(inCart.qty < stokMax) inCart.qty++;
-                else alert("Stok maksimal tercapai!");
-            } else {
-                if(stokMax > 0) cart.push({ id, nama, harga, qty: 1 });
-                else alert("Stok habis!");
-            }
-            renderCart();
-        }
-
-        function renderCart() {
-            const container = document.getElementById('cart-items');
-            let total = 0;
-            container.innerHTML = cart.map((c, idx) => {
-                total += (c.harga * c.qty);
-                return `
-                <div class="flex justify-between items-center bg-slate-50 p-4 rounded-2xl border border-slate-100 group">
-                    <div class="flex-1">
-                        <p class="font-bold text-xs text-slate-800 mb-1">${c.nama}</p>
-                        <div class="flex items-center gap-2">
-                             <span class="bg-orange-100 text-orange-600 px-2 py-0.5 rounded-lg text-[10px] font-black">${c.qty}x</span>
-                             <span class="text-[10px] text-slate-400 font-bold">@ Rp ${c.harga.toLocaleString()}</span>
-                        </div>
-                    </div>
-                    <button onclick="removeFromCart(${idx})" class="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition">
-                        <i data-lucide="trash-2" class="w-4 h-4"></i>
-                    </button>
-                </div>`;
-            }).join('') || '<div class="text-center py-10"><i data-lucide="shopping-cart" class="w-10 h-10 text-slate-100 mx-auto mb-2"></i><p class="text-slate-300 italic text-xs font-bold uppercase tracking-widest">Kosong</p></div>';
-            document.getElementById('cart-total').innerText = "Rp " + total.toLocaleString();
-            refreshIcons();
-        }
-
-        function removeFromCart(idx) { cart.splice(idx, 1); renderCart(); }
-
-        async function checkout() {
-            if(!cart.length) return alert("Pilih barang dulu!");
-            setLoader(true, "Mengirim pesanan...");
-            try {
-                await fetch(API_URL, { 
-                    method: 'POST', mode: 'no-cors', 
-                    body: JSON.stringify({ action: 'jual', user: user.nama, items: cart }) 
-                });
-                
-                let msg = `*PESANAN BARU - MAQSHOF AL FARUQ*\n━━━━━━━━━━━━━━\n👤 *Nama:* ${user.nama}\n📅 *Tgl:* ${new Date().toLocaleDateString('id-ID')}\n\n*Daftar Belanja:*\n`;
-                cart.forEach(c => msg += `• ${c.nama} (${c.qty}x)\n`);
-                msg += `\n*TOTAL BAYAR:* ${document.getElementById('cart-total').innerText}\n━━━━━━━━━━━━━━\n_Mohon segera diproses, Syukron!_`;
-                
-                window.open(`https://wa.me/${WA_ADMIN}?text=${encodeURIComponent(msg)}`, '_blank');
-                
-                cart = []; renderCart(); fetchData();
-                alert("Berhasil! Silakan konfirmasi ke admin.");
-            } catch(e) { alert("Gagal transaksi."); }
-            setLoader(false);
-        }
-
-        // --- UI HELPERS ---
-        function showPage(id) {
-            document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden'));
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('nav-active'));
-            document.getElementById('page-'+id).classList.remove('hidden');
-            document.getElementById('nav-'+id).classList.add('nav-active');
-            
-            const titles = { 'dashboard': 'Dashboard', 'barang': 'Kelola Stok', 'pesan': 'Katalog Maqshof' };
-            document.getElementById('page-title').innerText = titles[id];
-            refreshIcons();
-        }
-
-        function setLoader(s, t) {
-            document.getElementById('loading').style.display = s ? 'flex' : 'none';
-            document.getElementById('loading-text').innerText = t;
-        }
-    </script>
-</body>
-</html>
+function StatCard({ title, value, color }) {
+  const colors = {
+    slate: 'text-slate-800',
+    blue: 'text-blue-600',
+    green: 'text-green-600'
+  };
+  return (
+    <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">{title}</p>
+      <h3 className={`text-3xl font-black ${colors[color]}`}>{value}</h3>
+    </div>
+  );
+}
